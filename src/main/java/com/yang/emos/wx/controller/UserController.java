@@ -3,16 +3,14 @@ package com.yang.emos.wx.controller;
 import com.yang.emos.wx.common.util.R;
 import com.yang.emos.wx.config.shiro.JWTUtil;
 import com.yang.emos.wx.controller.form.RegisterForm;
+import com.yang.emos.wx.controller.form.loginForm;
 import com.yang.emos.wx.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.Set;
@@ -39,6 +37,15 @@ public class UserController {
         Set<String> permsSet = userService.searchUserPermissions(id);
         saveCacheToken(token,id);
         return R.ok("用户注册成功").put("token",token).put("permission",permsSet);
+    }
+    @PostMapping("/login")
+    @ApiOperation("登录系统")
+    public R login(@Valid @RequestBody loginForm form){
+        int id = userService.login(form.getCode());
+        String token = jwtUtil.createToken(id);
+        saveCacheToken(token,id);
+        Set<String> permSet = userService.searchUserPermissions(id);
+        return R.ok("登录成功").put("token",token).put("permission",permSet);
     }
     private void saveCacheToken(String token, int userId){
         redisTemplate.opsForValue().set(token,userId+"",cacheExpire, TimeUnit.DAYS);
