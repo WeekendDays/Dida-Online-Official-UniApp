@@ -10,6 +10,10 @@ server:
     context-path: /emos-wx-api
 
 spring:
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     druid:
@@ -45,3 +49,28 @@ spring:
       authentication-database: admin
       username: admin
       password: reinxx00
+
+mybatis:
+  mapper-locations: classpath*:mapper/*.xml
+  type-aliases-package: com.yang.emos.wx.db.pojo
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: true
+
+logging:
+  level:
+    root: info
+    com.yang.emos.wx.db.dao : warn
+  pattern:
+    console: "%d{HH:mm:ss}  %-5level  %msg%n"
+
+
+emos:
+  jwt:
+    secret: abc123456
+    expire: 5
+    cache-expire: 10
+
+wx:
+  app-id: wxbb7e00261ae48601
+  app-secret: 94c03494e4f45128ff43eb24ebf1ba10

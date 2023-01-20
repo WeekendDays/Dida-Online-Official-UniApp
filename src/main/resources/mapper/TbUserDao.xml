@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yang.emos.wx.db.dao.TbUserDao">
+    <select id="haveRootUser" resultType="boolean">
+        select IF(COUNT(*),TRUE,False) from tb_user where root=1
+    </select>
+    <select id="searchIdByOpenId" parameterType="string" resultType="integer">
+        select id from tb_user where open_id = #{openId} and status = 1
+    </select>
+    <insert id="insert" parameterType="hashmap">
+        insert into tb_user
+        set
+            <if test="openId != null">
+                open_id = #{openId},
+            </if>
+            <if test="nickname != null">
+                nickname = #{nickname},
+            </if>
+            <if test="photo != null">
+                photo = #{photo},
+            </if>
+            <if test="sex != null">
+                sex = #{sex},
+            </if>
+            <if test="tel != null">
+                tel = #{tel},
+            </if>
+            <if test="email != null">
+                email = #{email},
+            </if>
+            <if test="hiredate != null">
+                hiredate = #{hiredate},
+            </if>
+            role = #{role},
+            root = #{root},
+            <if test="depName != null">
+                dept_id = ( select id from tb_dept where dept_name = #{deptName} ),
+            </if>
+            status = #{status},
+            create_time = #{createTime}
+    </insert>
+    <select id="searchUserPermissions" parameterType="int" resultType="string">
+        SELECT p.permission_name
+        from tb_user u
+        JOIN tb_role r on JSON_CONTAINS(u.role,CAST(r.id AS CHAR))
+        JOIN tb_permission p on JSON_CONTAINS(r.permissions, CAST(p.id AS CHAR ))
+        WHERE u.id = #{userId} AND u.status = 1;
+    </select>
+</mapper>
