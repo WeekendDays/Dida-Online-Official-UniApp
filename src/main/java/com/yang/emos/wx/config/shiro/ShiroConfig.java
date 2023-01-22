@@ -1,10 +1,10 @@
 package com.yang.emos.wx.config.shiro;
 
-import org.apache.shiro.mgt.DefaultSecurityManager;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.spring.LifecycleBeanPostProcessor;
 import org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
+import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -17,15 +17,17 @@ import java.util.Map;
 public class ShiroConfig {
     @Bean("securityManager")
     public SecurityManager securityManager(OAuth2Realm realm){
-        DefaultSecurityManager securityManager = new DefaultSecurityManager();
+        DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
         securityManager.setRealm(realm);
         securityManager.setRememberMeManager(null);
         return securityManager;
     }
 
+    @Bean("shiroFilter")
     public ShiroFilterFactoryBean shiroFilter(SecurityManager securityManager, OAuth2Filter filter){
         ShiroFilterFactoryBean shiroFilter = new ShiroFilterFactoryBean();
         shiroFilter.setSecurityManager(securityManager);
+
         Map<String, Filter> map = new HashMap<>();
         map.put("oauth2",filter);
         shiroFilter.setFilters(map);
@@ -44,6 +46,7 @@ public class ShiroConfig {
         filterMap.put("/user/login","anon");
         filterMap.put("/test/**","anon");
         filterMap.put("/**","oauth2");
+
         shiroFilter.setFilterChainDefinitionMap(filterMap);
 
         return shiroFilter;
