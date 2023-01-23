@@ -7,6 +7,11 @@
     <select id="searchIdByOpenId" parameterType="string" resultType="integer">
         select id from tb_user where open_id = #{openId} and status = 1
     </select>
+    <select id="searchById" parameterType="int" resultType="com.yang.emos.wx.db.pojo.TbUser">
+        select
+            id, open_id, nickname, photo, name, sex, tel, role, root, dept_id, status, create_time
+        from tb_user where id = #{userId} and status = 1
+    </select>
     <insert id="insert" parameterType="hashmap">
         insert into tb_user
         set
