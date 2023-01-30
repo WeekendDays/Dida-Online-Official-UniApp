@@ -12,38 +12,6 @@
             id, open_id, nickname, photo, name, sex, tel, role, root, dept_id, status, create_time
         from tb_user where id = #{userId} and status = 1
     </select>
-    <insert id="insert" parameterType="hashmap">
-        insert into tb_user
-        set
-            <if test="openId != null">
-                open_id = #{openId},
-            </if>
-            <if test="nickname != null">
-                nickname = #{nickname},
-            </if>
-            <if test="photo != null">
-                photo = #{photo},
-            </if>
-            <if test="sex != null">
-                sex = #{sex},
-            </if>
-            <if test="tel != null">
-                tel = #{tel},
-            </if>
-            <if test="email != null">
-                email = #{email},
-            </if>
-            <if test="hiredate != null">
-                hiredate = #{hiredate},
-            </if>
-            role = #{role},
-            root = #{root},
-            <if test="depName != null">
-                dept_id = ( select id from tb_dept where dept_name = #{deptName} ),
-            </if>
-            status = #{status},
-            create_time = #{createTime}
-    </insert>
     <select id="searchUserPermissions" parameterType="int" resultType="string">
         SELECT p.permission_name
         from tb_user u
@@ -51,4 +19,50 @@
         JOIN tb_permission p on JSON_CONTAINS(r.permissions, CAST(p.id AS CHAR ))
         WHERE u.id = #{userId} AND u.status = 1;
     </select>
+    <select id="searchNameAndDept" parameterType="int" resultType="hashmap">
+        SELECT u.name, d.dept_name
+        FROM tb_user u LEFT JOIN tb_dept d ON u.dept_id = d.id
+        WHERE u.id = #{userId} AND u.status = 1
+    </select>
+    <select id="searchUserHiredate" parameterType="int" resultType="string">
+        SELECT hiredate FROM tb_user
+        WHERE id = #{userId} AND status = 1
+    </select>
+    <select id="searchUserSummary" parameterType="int" resultType="hashmap">
+        SELECT u.name, u.photo, d.dept_name AS deptName
+        FROM tb_user u LEFT JOIN tb_dept d ON u.dept_id = d.id
+        WHERE u.id = #{userId} AND u.status = 1
+    </select>
+    <insert id="insert" parameterType="hashmap">
+        insert into tb_user
+        set
+        <if test="openId != null">
+            open_id = #{openId},
+        </if>
+        <if test="nickname != null">
+            nickname = #{nickname},
+        </if>
+        <if test="photo != null">
+            photo = #{photo},
+        </if>
+        <if test="sex != null">
+            sex = #{sex},
+        </if>
+        <if test="tel != null">
+            tel = #{tel},
+        </if>
+        <if test="email != null">
+            email = #{email},
+        </if>
+        <if test="hiredate != null">
+            hiredate = #{hiredate},
+        </if>
+        role = #{role},
+        root = #{root},
+        <if test="depName != null">
+            dept_id = ( select id from tb_dept where dept_name = #{deptName} ),
+        </if>
+        status = #{status},
+        create_time = #{createTime}
+    </insert>
 </mapper>

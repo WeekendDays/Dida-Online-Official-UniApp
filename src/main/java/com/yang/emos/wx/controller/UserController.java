@@ -13,6 +13,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -46,6 +47,13 @@ public class UserController {
         saveCacheToken(token,id);
         Set<String> permSet = userService.searchUserPermissions(id);
         return R.ok("登录成功").put("token",token).put("permission",permSet);
+    }
+    @RequestMapping("/searchUserSummary")
+    @ApiOperation(("查询用户摘要信息"))
+    public R searchUserSummary(@RequestHeader("token") String token){
+        int userId = jwtUtil.getUserId(token);
+        HashMap map = userService.searchUserSummary(userId);
+        return R.ok().put("result",map);
     }
     private void saveCacheToken(String token, int userId){
         redisTemplate.opsForValue().set(token,userId+"",cacheExpire, TimeUnit.DAYS);

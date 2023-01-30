@@ -6,4 +6,55 @@
         where user_id = #{user_id} and date = CURRENT_DATE
         AND create_time BETWEEN #{start} AND #{end} LIMIT 1
     </select>
+    <insert id="insert" parameterType="com.yang.emos.wx.db.pojo.TbCheckin">
+        insert into tb_checkin set user_id = #{userId},
+        <if test="address!=null">
+            address = #{address},
+        </if>
+        <if test="country!=null">
+            country = #{country},
+        </if>
+        <if test="province!=null">
+            province = #{province},
+        </if>
+        <if test="city!=null">
+            city = #{city},
+        </if>
+        <if test="district!=null">
+            district = #{district},
+        </if>
+        status = #{status},
+        <if test="risk != null">
+            risk = #{risk},
+        </if>
+        date = #{date},
+        create_time = #{createTime}
+    </insert>
+    <select id="searchTodayCheckin" parameterType="int" resultType="hashmap">
+        select
+            u.name, u.photo, d.dept_name as deptName, ck.address,
+            case
+                when ck.status = 1 then '正常'
+                when ck.status = 2 then '迟到'
+                end as status,
+            date_format(ck.create_time,"%H:%i") as checkinTime,
+            ck.date
+        from tb_user u
+                 left join tb_dept d on u.dept_id = d.id
+                 left join tb_checkin ck on u.id = ck.user_id and ck.date = current_date
+        where u.id = #{userId} and u.status = 1
+    </select>
+    <select id="searchCheckinDays" parameterType="int" resultType="long">
+        select count(*) as count
+        from tb_checkin
+        where user_id = #{userId}
+    </select>
+    <select id="searchWeekCheckin" parameterType="hashmap" resultType="hashmap">
+        select
+            cast(date as char) as date,
+        if(status = 1,'正常','迟到') as status
+        from tb_checkin
+        where user_id = #{userId}
+          and date between #{startDate} and #{endDate}
+    </select>
 </mapper>

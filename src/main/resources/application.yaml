@@ -49,6 +49,11 @@ spring:
       authentication-database: admin
       username: admin
       password: reinxx00
+  mail:
+    default-encoding: UTF-8
+    host: smtp.163.com
+    username: yanglemonx@163.com
+    password: Yang990513@#
 
 mybatis:
   mapper-locations: classpath*:mapper/*.xml
@@ -70,6 +75,14 @@ emos:
     secret: abc123456
     expire: 5
     cache-expire: 10
+  face:
+    createFaceModelUrl: http://192.168.0.104:3000/create_face_model
+    checkinUrl: http://192.168.0.104:3000/checkin
+  email:
+    system: yanglemonx@163.com
+    hr: 996881704@qq.com
+  image-folder: /Users/lemonx/Documents
+  code: 1111111111
 
 wx:
   app-id: wxbb7e00261ae48601

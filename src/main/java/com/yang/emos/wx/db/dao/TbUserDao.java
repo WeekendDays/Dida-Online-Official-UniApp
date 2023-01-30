@@ -1,5 +1,6 @@
 package com.yang.emos.wx.db.dao;
 
+import cn.hutool.core.lang.hash.Hash;
 import com.yang.emos.wx.db.pojo.TbUser;
 import io.swagger.models.auth.In;
 import org.apache.ibatis.annotations.Mapper;
@@ -19,4 +20,10 @@ public interface TbUserDao {
     public Set<String> searchUserPermissions(int userId);
 
     public TbUser searchById(int userId);
+
+    public HashMap searchNameAndDept(int userId);
+
+    public String searchUserHiredate(int userId);
+
+    public HashMap searchUserSummary(int userId);
 }
