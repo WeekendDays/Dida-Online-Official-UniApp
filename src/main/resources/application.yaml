@@ -83,6 +83,9 @@ emos:
     hr: 996881704@qq.com
   image-folder: /Users/lemonx/Documents
   code: 1111111111
+  receiveNotify: http://localhost:8080/emos-wx-api/meeting/recieveNotify
+workflow:
+    url: http://localhost:9090/emos-workflow
 
 wx:
   app-id: wxbb7e00261ae48601

@@ -14,9 +14,9 @@ public class MessageRefEntity implements Serializable {
     @Id
     private String _id;
     @Indexed
-    private String message_id;
+    private String messageId;
     @Indexed
-    private Integer receivedId;
+    private Integer receiverId;
     @Indexed
     private Boolean readFlag;
     @Indexed

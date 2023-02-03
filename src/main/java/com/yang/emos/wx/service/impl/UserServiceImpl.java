@@ -1,22 +1,23 @@
 package com.yang.emos.wx.service.impl;
 
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import com.yang.emos.wx.db.dao.TbDeptDao;
 import com.yang.emos.wx.db.dao.TbUserDao;
+import com.yang.emos.wx.db.pojo.MessageEntity;
 import com.yang.emos.wx.db.pojo.TbUser;
 import com.yang.emos.wx.exception.EmosException;
 import com.yang.emos.wx.service.UserService;
+import com.yang.emos.wx.task.MessageTask;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -28,6 +29,11 @@ public class UserServiceImpl implements UserService {
     private String appSecret;
     @Autowired
     private TbUserDao userDao;
+    @Autowired
+    private MessageTask messageTask;
+
+    @Autowired
+    private TbDeptDao deptDao;
 
     private String getOpenId(String code){
         String url = "https://api.weixin.qq.com/sns/jscode2session";
@@ -62,6 +68,15 @@ public class UserServiceImpl implements UserService {
                 param.put("root", true);
                 userDao.insert(param);
                 int id = userDao.searchIdByOpenId(openId);
+
+                MessageEntity entity = new MessageEntity();
+                entity.setSenderId(0);
+                entity.setSenderName("系统消息");
+                entity.setUuid(IdUtil.simpleUUID()); // 生成uuid的字符串
+                entity.setMsg("欢迎您注册成为超级管理员，请及时更新您的员工个人信息");
+                entity.setSendTime(new Date());
+                messageTask.sendAsync(id+"", entity);
+
                 return id;
             }
         }
@@ -85,6 +100,7 @@ public class UserServiceImpl implements UserService {
             throw new EmosException("账户不存在");
         }
         //todo 从消息队列中接收消息，转移到消息表
+        //messageTask.receiveAsync(id+"");
         return id;
     }
 
@@ -103,5 +119,29 @@ public class UserServiceImpl implements UserService {
     public HashMap searchUserSummary(int userId) {
         HashMap map = userDao.searchUserSummary(userId);
         return map;
+    }
+
+    @Override
+    public ArrayList<HashMap> searchUserGroupByDept(String keyword) {
+        ArrayList<HashMap> list_1 = deptDao.searchDeptMembers(keyword);
+        ArrayList<HashMap> list_2 = userDao.searchUserGroupByDept(keyword);
+        for(HashMap map_1:list_1){
+            long deptId = (Long) map_1.get("id");
+            ArrayList members = new ArrayList();
+            for(HashMap map_2:list_2){
+                long id = (Long) map_2.get("deptId");
+                if(deptId == id){
+                    members.add(map_2);
+                }
+            }
+            map_1.put("members",members);
+        }
+        return list_1;
+    }
+
+    @Override
+    public ArrayList<HashMap> searchMembers(List param) {
+        ArrayList<HashMap> list = userDao.searchMembers(param);
+        return list;
     }
 }
