@@ -16,7 +16,7 @@
         SELECT p.permission_name
         from tb_user u
         JOIN tb_role r on JSON_CONTAINS(u.role,CAST(r.id AS CHAR))
-        JOIN tb_permission p on JSON_CONTAINS(r.permissions, CAST(p.id AS CHAR ))
+        JOIN tb_permission p on JSON_CONTAINS(r.permissions,CAST(p.id AS CHAR ))
         WHERE u.id = #{userId} AND u.status = 1;
     </select>
     <select id="searchNameAndDept" parameterType="int" resultType="hashmap">
@@ -69,25 +69,40 @@
             CASE u.status
                 WHEN 1 THEN "在职"
                 WHEN 2 THEN "离职"
-                END
-            (SELECT GROUP_CONCAT(role_name separator "，") FROM tb_role WHERE JSON_CONTAINS(u.role, CONVERT(id, CHAR)) ) AS roles
+            END AS status,
+            (
+                SELECT GROUP_CONCAT(role_name separator "，")
+                FROM tb_role WHERE JSON_CONTAINS(u.role, CONVERT(id, CHAR))
+            ) AS roles
         FROM tb_user u
-                 LEFT JOIN tb_dept d ON u.dept_id = d.id
+        LEFT JOIN tb_dept d ON u.dept_id = d.id
         WHERE u.id = #{userId} AND u.status = 1
     </select>
     <select id="searchDeptManagerId" parameterType="int" resultType="int">
         SELECT
             u2.id
         FROM tb_user u1 JOIN tb_user u2 ON u1.dept_id = u2.dept_id
-                        JOIN tb_role r ON JSON_CONTAINS(u2.role, CAST(r.id AS CHAR))
+        JOIN tb_role r ON JSON_CONTAINS(u2.role, CAST(r.id AS CHAR))
         WHERE u1.id = #{id} AND r.id = 2 AND u1.status = 1 AND u2.status = 1
     </select>
     <select id="searchGmId" resultType="int">
         SELECT
             u.id
         FROM tb_user u
-                 JOIN tb_role r ON JSON_CONTAINS(u.role, CAST(r.id AS CHAR))
+        JOIN tb_role r ON JSON_CONTAINS(u.role, CAST(r.id AS CHAR))
         WHERE r.id = 1 AND u.status = 1
+    </select>
+    <select id="selectUserPhotoAndName" parameterType="list" resultType="hashmap">
+        SELECT
+            id,name,photo
+        FROM tb_user
+        WHERE status = 1 AND id IN
+        <foreach collection="list" open="(" close=")" item="one" separator=",">
+            #{one}
+        </foreach>
+    </select>
+    <select id="searchMemberEmail" parameterType="int" resultType="string">
+        SELECT email FROM tb_user WHERE id=#{id} AND status = 1
     </select>
     <insert id="insert" parameterType="hashmap">
         insert into tb_user

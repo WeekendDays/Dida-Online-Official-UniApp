@@ -45,6 +45,7 @@ public class ShiroConfig {
         filterMap.put("/user/register","anon");
         filterMap.put("/user/login","anon");
         //filterMap.put("/test/**","anon");
+        filterMap.put("/meeting/receiveNotify", "anon");
         filterMap.put("/**","oauth2");
 
         shiroFilter.setFilterChainDefinitionMap(filterMap);

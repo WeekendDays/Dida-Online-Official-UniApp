@@ -3,10 +3,8 @@ package com.yang.emos.wx.controller;
 import cn.hutool.json.JSONUtil;
 import com.yang.emos.wx.common.util.R;
 import com.yang.emos.wx.config.shiro.JWTUtil;
-import com.yang.emos.wx.controller.form.RegisterForm;
-import com.yang.emos.wx.controller.form.SearchMembersForm;
-import com.yang.emos.wx.controller.form.SearchUserGroupByDeptForm;
-import com.yang.emos.wx.controller.form.loginForm;
+import com.yang.emos.wx.config.tencent.TLSSigAPIv2;
+import com.yang.emos.wx.controller.form.*;
 import com.yang.emos.wx.exception.EmosException;
 import com.yang.emos.wx.service.UserService;
 import io.swagger.annotations.Api;
@@ -38,6 +36,12 @@ public class UserController {
     @Value("${emos.jwt.cache-expire}")
     private int cacheExpire; //过期时间
     //注册方法，接收客户端提交的数据
+    @Value("${trtc.appid}")
+    private Integer appid;
+    @Value("${trtc.key}")
+    private String key;
+    @Value("${trtc.expire}")
+    private Integer expire;
     @PostMapping("/register")
     @ApiOperation("注册用户")
     public R register(@Valid @RequestBody RegisterForm form){
@@ -80,6 +84,26 @@ public class UserController {
         List<Integer> param = JSONUtil.parseArray(form.getMembers()).toList(Integer.class);
         ArrayList<HashMap> list = userService.searchMembers(param);
         return R.ok().put("result", list);
+    }
+    @PostMapping("/selectUserPhotoAndName")
+    @ApiOperation("查询用户姓名和头像")
+    @RequiresPermissions(value = {"WORKFLOW:APPROVAL"})
+    public R selectUserPhotoAndName(@Valid @RequestBody SelectUserPhotoAndNameForm form){
+        if (!JSONUtil.isJsonArray(form.getIds())){
+            throw new EmosException("参数不是JSON数组");
+        }
+        List<Integer> param = JSONUtil.parseArray(form.getIds()).toList(Integer.class);
+        List<HashMap> list = userService.selectUserPhotoAndName(param);
+        return R.ok().put("result",list);
+    }
+    @GetMapping("/genUserSig")
+    @ApiOperation("生成用户签名")
+    public R genUserSig(@RequestHeader("token") String token){
+        int id = jwtUtil.getUserId(token);
+        String email = userService.searchMemberEmail(id);
+        TLSSigAPIv2 api = new TLSSigAPIv2(appid,key);
+        String userSig = api.genUserSig(email, expire);
+        return R.ok().put("userSig",userSig).put("email",email);
     }
     private void saveCacheToken(String token, int userId){
         redisTemplate.opsForValue().set(token,userId+"",cacheExpire, TimeUnit.DAYS);

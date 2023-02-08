@@ -86,7 +86,10 @@ emos:
   receiveNotify: http://localhost:8080/emos-wx-api/meeting/recieveNotify
 workflow:
     url: http://localhost:9090/emos-workflow
-
+trtc:
+  appid: 1400791498
+  key: c29f4e57f891958b017f504256c202888e8b73ba2f3ba3f3a555af815de32f5f
+  expire: 86400
 wx:
   app-id: wxbb7e00261ae48601
   app-secret: 94c03494e4f45128ff43eb24ebf1ba10

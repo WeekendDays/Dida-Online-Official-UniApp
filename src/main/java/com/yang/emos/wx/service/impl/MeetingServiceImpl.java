@@ -1,8 +1,14 @@
 package com.yang.emos.wx.service.impl;
 
+import cn.hutool.core.date.DateField;
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.http.HttpRequest;
+import cn.hutool.http.HttpResponse;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
 import com.yang.emos.wx.db.dao.TbMeetingDao;
 import com.yang.emos.wx.db.dao.TbUserDao;
 import com.yang.emos.wx.db.pojo.TbMeeting;
@@ -11,10 +17,12 @@ import com.yang.emos.wx.service.MeetingService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -29,6 +37,8 @@ public class MeetingServiceImpl implements MeetingService {
     private String workflow;
     @Value("${emos.receiveNotify}")
     private String receiveNotify;
+    @Autowired
+    private RedisTemplate redisTemplate;
     @Override
     public void insertMeeting(TbMeeting entity) {
         int row = meetingDao.insertMeeting(entity);
@@ -61,6 +71,87 @@ public class MeetingServiceImpl implements MeetingService {
         }
         return resultList;
     }
+
+    @Override
+    public HashMap searchMeetingById(int id) {
+        HashMap map = meetingDao.searchMeetingById(id);
+        ArrayList<HashMap> list = meetingDao.searchMeetingMembers(id);
+        map.put("members",list);
+        return map;
+    }
+
+    @Override
+    public void updateMeetingInfo(HashMap param) {
+        int id = (int) param.get("id");
+        String date = param.get("date").toString();
+        String start = param.get("start").toString();
+//        String instanceId = param.get("instanceId").toString();
+        HashMap oldMeeting = meetingDao.searchMeetingById(id);
+        String uuid = oldMeeting.get("uuid").toString();
+        Integer creatorId = Integer.parseInt(oldMeeting.get("creatorId").toString());
+        int row = meetingDao.updateMeetingInfo(param);
+        if (row != 1) {
+            throw new EmosException("会议更新失败");
+        }
+        JSONObject json = new JSONObject();
+//        json.set("instanceId", instanceId);
+        json.set("reason", "会议被修改");
+        json.set("uuid", uuid);
+        json.set("code", code);
+        String url = workflow + "/workflow/deleteProcessById";
+//        HttpResponse resp = HttpRequest.post(url).header("content-type", "application/json")
+//                .body(json.toString()).execute();
+//        if (resp.getStatus() != 200) {
+//            log.error("删除工作流失败");
+//            throw new EmosException("删除工作流失败");
+//        }
+//        startMeetingWorkflow(uuid, creatorId, date, start);
+    }
+
+    @Override
+    public void deleteMeetingById(int id) {
+        HashMap meeting = meetingDao.searchMeetingById(id);
+        String uuid = meeting.get("uuid").toString();
+        String instanceId = meeting.get("instanceId").toString();
+        DateTime date = DateUtil.parse(meeting.get("date") + " " + meeting.get("start"));
+        DateTime now = DateUtil.date();
+        System.out.println("666");
+        System.out.println(now);
+        System.out.println(date);
+        if (now.isAfterOrEquals(date.offset(DateField.MINUTE, -20))) {
+            throw new EmosException("距离会议开始不足20分钟，不能删除会议");
+        }
+        int row = meetingDao.deleteMeetingById(id);
+        if (row != 1) {
+            throw new EmosException("会议删除失败");
+        }
+        JSONObject json = new JSONObject();
+        json.set("instanceId", instanceId);
+        json.set("reason", "会议被修改");
+        json.set("uuid", uuid);
+        json.set("code", code);
+        String url = workflow + "/workflow/deleteProcessById";
+//        HttpResponse resp = HttpRequest.post(url).header("content-type", "application/json")
+//                .body(json.toString()).execute();
+//        if (resp.getStatus() != 200) {
+//            log.error("删除工作流失败");
+//            throw new EmosException("删除工作流失败");
+//        }
+    }
+
+    @Override
+    public Long searchRoomIdByUUID(String uuid) {
+        Object temp = redisTemplate.opsForValue().get(uuid);
+        long roomId = Long.parseLong(temp.toString());
+        return roomId;
+    }
+
+    @Override
+    public List<String> searchUserMeetingInMonth(HashMap param) {
+        List<String> list = meetingDao.searchUserMeetingInMonth(param);
+        return list;
+    }
+
     private void startMeetingWorkflow(String uuid, int creatorId, String date, String start){
         HashMap info = userDao.searchUserInfo(creatorId);
         JSONObject json = new JSONObject();
@@ -88,7 +179,7 @@ public class MeetingServiceImpl implements MeetingService {
 //            HashMap param = new HashMap();
 //            param.put("uuid", uuid);
 //            param.put("instanceId", instanceId);
-//            int row = tbMeetingDao.updateMeetingInstanceId(param);
+//            int row = meetingDao.updateMeetingInstanceId(param);
 //            if(row != 1){
 //                throw new EmosException("保存会议工作流实例ID失败");
 //            }

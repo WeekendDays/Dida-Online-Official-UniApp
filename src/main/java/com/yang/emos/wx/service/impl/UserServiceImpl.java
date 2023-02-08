@@ -1,5 +1,6 @@
 package com.yang.emos.wx.service.impl;
 
+import cn.hutool.core.lang.hash.Hash;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONObject;
@@ -143,5 +144,17 @@ public class UserServiceImpl implements UserService {
     public ArrayList<HashMap> searchMembers(List param) {
         ArrayList<HashMap> list = userDao.searchMembers(param);
         return list;
+    }
+
+    @Override
+    public List<HashMap> selectUserPhotoAndName(List param) {
+        List<HashMap> list = userDao.selectUserPhotoAndName(param);
+        return list;
+    }
+
+    @Override
+    public String searchMemberEmail(int id) {
+        String email = userDao.searchMemberEmail(id);
+        return email;
     }
 }
